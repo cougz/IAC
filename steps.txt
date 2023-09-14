@@ -1,0 +1,9 @@
+# Create a virtual environment (optional but recommended)
+python -m venv venv
+source venv/bin/activate  # Activate the virtual environment (on Linux/macOS)
+
+# Install FastAPI and Uvicorn
+pip install fastapi uvicorn
+
+# Run the application
+uvicorn main:app --host 0.0.0.0 --port 8000 --reload
