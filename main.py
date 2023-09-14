@@ -12,6 +12,10 @@ class NginxConfigRequest(BaseModel):
     server_name: str # e.g., "tim-seiffert.lab.infinigate.io"
     proxy_pass: str  # e.g., "192.168.0.1:8080"
 
+# Pydantic model to represent the request body for deleting configuration
+class NginxDeleteRequest(BaseModel):
+    server_name: str # e.g., "tim-seiffert.lab.infinigate.io"
+
 @app.post("/update-nginx-config")
 async def update_nginx_config(config_request: NginxConfigRequest):
     # Extract 'server_name' and 'proxy_pass' from the request body
@@ -31,6 +35,10 @@ async def update_nginx_config(config_request: NginxConfigRequest):
     }}
     server {{
         listen 443 ssl;
+        http2 on;
+        include /etc/nginx/snippets/ssl.conf;
+        ssl_certificate /etc/zerossl/ecc-certs/fullchain.pem;
+        ssl_certificate_key /etc/zerossl/ecc-certs/privkey.pem;
         server_name {server_name};
         location / {{
 		    proxy_pass {proxy_pass};
@@ -52,6 +60,26 @@ async def update_nginx_config(config_request: NginxConfigRequest):
         os.system("nginx -s reload")
 
         return {"message": "Nginx configuration updated successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.delete("/delete-nginx-config")
+async def delete_nginx_config(delete_request: NginxDeleteRequest):
+    # Extract 'server_name' from the request body
+    server_name = delete_request.server_name
+
+    # Generate the configuration file path to be deleted
+    config_file_name = f"{server_name}.conf"
+    config_file_path = os.path.join(nginx_config_dir, config_file_name)
+
+    try:
+        # Delete the configuration file
+        os.remove(config_file_path)
+
+        # Reload Nginx to apply the removal
+        os.system("nginx -s reload")
+
+        return {"message": "Nginx configuration deleted successfully"}
     except Exception as e:
         return {"error": str(e)}
 
