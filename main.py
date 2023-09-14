@@ -1,15 +1,23 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os
+import cloudflare
+from decouple import config
 
+# Intitiate FastAPI
 app = FastAPI()
+
+# Read Cloudflare credentials from environment variables using decouple
+CF_EMAIL = config('CF_EMAIL')
+CF_API_KEY = config('CF_API_KEY')
+CF_ZONE_ID = config('CF_ZONE_ID')
 
 # Define the base directory where Nginx configuration files will be stored
 nginx_config_dir = "/etc/nginx/conf.d"
 
 # Pydantic model to represent the request body
 class NginxConfigRequest(BaseModel):
-    server_name: str # e.g., "tim-seiffert.lab.infinigate.io"
+    server_name: str # e.g., "tim-seiffert-sfb.lab.infinigate.io"
     proxy_pass: str  # e.g., "192.168.0.1:8080"
 
 # Pydantic model to represent the request body for deleting configuration
@@ -83,6 +91,54 @@ async def delete_nginx_config(delete_request: NginxDeleteRequest):
     except Exception as e:
         return {"error": str(e)}
 
+@app.post("/update-dns")
+async def update_dns(config_request: NginxConfigRequest):
+    # Extract 'server_name' from the request body
+    server_name = config_request.server_name
+
+    # Update DNS record using Cloudflare API (assuming 'server_name' is a subdomain)
+    cf = cloudflare.CloudFlare(email=CF_EMAIL, token=CF_API_KEY)
+    zone_id = CF_ZONE_ID
+
+    # Specify the DNS record details
+    dns_record = {
+        "type": "A",
+        "name": server_name,
+        "content": "1.1.1.1",  # Replace with your actual server IP address
+    }
+
+    try:
+        # Create or update the DNS record
+        dns_records = cf.zones.dns_records.get(zone_id, params=dns_record)
+        if not dns_records:
+            cf.zones.dns_records.post(zone_id, data=dns_record)
+        else:
+            dns_record_id = dns_records[0]["id"]
+            cf.zones.dns_records.put(zone_id, dns_record_id, data=dns_record)
+
+        return {"message": "DNS record updated successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@app.delete("/delete-dns")
+async def delete_dns(delete_request: NginxDeleteRequest):
+    # Extract 'server_name' from the request body
+    server_name = delete_request.server_name
+
+    try:
+        # Delete the DNS record from Cloudflare
+        cf = cloudflare.CloudFlare(email=CF_EMAIL, token=CF_API_KEY)
+        zone_id = CF_ZONE_ID
+
+        # Find and delete the DNS record
+        dns_records = cf.zones.dns_records.get(zone_id, params={"name": server_name})
+        for dns_record in dns_records:
+            cf.zones.dns_records.delete(zone_id, dns_record["id"])
+
+        return {"message": "DNS record deleted successfully"}
+    except Exception as e:
+        return {"error": str(e)}
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
