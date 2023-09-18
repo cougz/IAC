@@ -2,6 +2,7 @@ import cloudflare
 from decouple import config
 from nginx_api import NginxConfigRequest, NginxDeleteRequest
 from pydantic import BaseModel
+from models import DNSTypes
 
 # Read Cloudflare credentials from environment variables using decouple
 CF_EMAIL = config('CF_EMAIL')
