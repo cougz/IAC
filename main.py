@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from decouple import config
 import os, re, asyncio, cloudflare
 
-# Intitiate FastAPI
+# Instantiate FastAPI
 app = FastAPI()
 
 # Read Cloudflare credentials from environment variables using decouple
