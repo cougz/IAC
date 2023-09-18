@@ -1,6 +1,7 @@
 # Create a virtual environment (optional but recommended)
 python -m venv venv
 source venv/bin/activate  # Activate the virtual environment (on Linux/macOS)
+# For Windows: venv\Scripts\activate
 
 # Install FastAPI and Uvicorn and python-decouple
 pip install fastapi uvicorn

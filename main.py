@@ -1,9 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import os
-import cloudflare
 from decouple import config
-import asyncio
+import os, re, asyncio, cloudflare
 
 # Intitiate FastAPI
 app = FastAPI()
@@ -36,6 +34,36 @@ class DeleteSeatRequest(BaseModel):
 class WaitGuacamoleResponse(BaseModel):
     guacamole_ip: str
 
+# GET Endpoints
+@app.get("/wait-guacamole")
+async def wait_for_guacamole_ip():
+    try:
+        # Placeholder for the Guacamole server's IP address obtained via DHCP
+        guacamole_ip = None
+
+        # Define a timeout (in seconds) to wait for the Guacamole server's IP address
+        timeout_seconds = 300  # Adjust as needed
+
+        # Poll for the Guacamole server's IP address until it becomes available
+        for _ in range(timeout_seconds):
+            # Implement logic to obtain the Guacamole server's IP address via DHCP here
+            # Once the IP address is obtained, assign it to the `guacamole_ip` variable
+            # Example: guacamole_ip = obtain_guacamole_ip()
+
+            if guacamole_ip:
+                break  # Exit the loop once the IP address is obtained
+
+            await asyncio.sleep(1)  # Wait for 1 second before checking again
+
+        if not guacamole_ip:
+            return {"error": "Guacamole server IP address not obtained within the timeout period"}
+
+        return {"guacamole_ip": guacamole_ip}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+# POST Endpoints
 @app.post("/update-nginx-config")
 async def update_nginx_config(config_request: NginxConfigRequest):
     # Extract 'server_name' and 'proxy_pass' from the request body
@@ -143,6 +171,7 @@ async def create_new_seat(new_seat_request: NewSeatRequest):
     except Exception as e:
         return {"error": str(e)}
 
+# DELETE Endpoints
 @app.delete("/delete-nginx-config")
 async def delete_nginx_config(delete_request: NginxDeleteRequest):
     # Extract 'server_name' from the request body
@@ -205,34 +234,6 @@ async def delete_seat(delete_seat_request: DeleteSeatRequest):
             "dns_delete_response": delete_dns_response,
             "nginx_delete_response": delete_nginx_response,
         }
-
-    except Exception as e:
-        return {"error": str(e)}
-
-@app.get("/wait-guacamole")
-async def wait_for_guacamole_ip():
-    try:
-        # Placeholder for the Guacamole server's IP address obtained via DHCP
-        guacamole_ip = None
-
-        # Define a timeout (in seconds) to wait for the Guacamole server's IP address
-        timeout_seconds = 300  # Adjust as needed
-
-        # Poll for the Guacamole server's IP address until it becomes available
-        for _ in range(timeout_seconds):
-            # Implement logic to obtain the Guacamole server's IP address via DHCP here
-            # Once the IP address is obtained, assign it to the `guacamole_ip` variable
-            # Example: guacamole_ip = obtain_guacamole_ip()
-
-            if guacamole_ip:
-                break  # Exit the loop once the IP address is obtained
-
-            await asyncio.sleep(1)  # Wait for 1 second before checking again
-
-        if not guacamole_ip:
-            return {"error": "Guacamole server IP address not obtained within the timeout period"}
-
-        return {"guacamole_ip": guacamole_ip}
 
     except Exception as e:
         return {"error": str(e)}
