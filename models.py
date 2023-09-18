@@ -44,4 +44,5 @@ class DNSRecordResponse(BaseModel):
     ttl: int
 
 class DNSRecordDelete(BaseModel):
-    record_id: str  # The ID of the DNS record to delete
+    record_name: str
+    record_type: str = "A"

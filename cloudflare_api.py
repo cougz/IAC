@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from decouple import config
 from nginx_api import NginxConfigRequest, NginxDeleteRequest
 from pydantic import BaseModel
-from models import DNSRecordResponse
+from models import DNSRecordResponse, DNSRecordDelete, DNSARecordCreate
 import requests
 
 # Read Cloudflare credentials from environment variables using decouple
@@ -11,14 +11,6 @@ CF_API_KEY = config('CF_API_KEY')
 CF_ZONE_ID = config('CF_ZONE_ID')
 
 cloudflare_router = APIRouter()
-
-class DNSARecordCreate(BaseModel):
-    name: str  # The name of the DNS record (e.g., subdomain.example.com)
-    content: str  # The IPv4 address associated with the A record (e.g., 192.168.1.1)
-    ttl: int = 3600  # Time to live (TTL) in seconds (default is 3600 seconds)
-
-class DNSRecordDelete(BaseModel):
-    record_id: str  # The ID of the DNS record to delete
 
 @cloudflare_router.post("/dns-record")
 async def create_dns(record: DNSARecordCreate):
@@ -55,12 +47,31 @@ async def create_dns(record: DNSARecordCreate):
 @cloudflare_router.delete("/dns-record")
 async def delete_dns_record(record_info: DNSRecordDelete):
     try:
-        # Extract the record ID from the request body
-        record_id = record_info.record_id
+        # Get All DNS records
+        list_dns_records_response = await list_dns_records()
+        if list_dns_records_response != 200:
+            raise HTTPException(status_code=response.status_code, detail="Failed to retrieve DNS records")
+        # Extract the record ID from the response
+        dns_records = list_dns_records_response.json()
+        matching_record = None
+        for record in dns_records:
+            if (
+                record["name"] == record_info.record_name
+                and record["type"] == record_info.record_type
+            ):
+                matching_record = record
+                break
+
+        if matching_record is None:
+            raise HTTPException(status_code=404, detail="DNS record not found")
+
+        # Extract the identifier (e.g., 'id') of the matching DNS record
+        record_id = matching_record["id"]
 
         # Construct the API URL for deleting a DNS record
         api_url = f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}"
-
+        print(f"{record_id}")
+        print(f"{api_url}")
         # Define the request headers, including the Cloudflare API token
         headers = {
             "Content-Type": "application/json",
@@ -82,7 +93,7 @@ async def delete_dns_record(record_info: DNSRecordDelete):
         raise HTTPException(status_code=500, detail=str(e))
     
 @cloudflare_router.get("/dns-records")
-async def get_all_dns_records():
+async def list_dns_records():
     try:
         # Construct the API URL for fetching all DNS records of the zone
         api_url = f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records"
@@ -92,7 +103,10 @@ async def get_all_dns_records():
             "Content-Type": "application/json",
             "Authorization": f"Bearer {CF_API_KEY}"
         }
-
+        #print(f"CF_EMAIL: {CF_EMAIL}")
+        #print(f"CF_API_KEY: {CF_API_KEY}")
+        #print(f"CF_ZONE_ID: {CF_ZONE_ID}")
+        
         # Send a GET request to fetch all DNS records
         response = requests.get(api_url, headers=headers)
 
