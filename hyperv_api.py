@@ -10,6 +10,9 @@ class DeleteSeatRequest(BaseModel):
     last_name: str
     training_name: str
 
+class WaitGuacamoleResponse(BaseModel):
+    guacamole_ip: str
+    
 hyperv_router = APIRouter()
 
 @hyperv_router.post("/seat")
