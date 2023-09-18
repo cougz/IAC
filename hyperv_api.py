@@ -1,6 +1,7 @@
+from fastapi import APIRouter
+import asyncio
 from pydantic import BaseModel
-from nginx_api import NginxConfigRequest, NginxDeleteRequest, nginx_router, update_nginx_config
-from cloudflare_api import create_dns, delete_dns   
+from nginx_api import NginxConfigRequest, NginxDeleteRequest, nginx_router, create_nginx_config, delete_nginx_config
 
 class NewSeatRequest(BaseModel):
     last_name: str # e.g. Seiffert
@@ -36,7 +37,7 @@ async def create_new_seat(new_seat_request: NewSeatRequest):
         # Create/update Nginx configuration with the obtained Guacamole server IP address
         proxy_pass = f"http://{guacamole_ip}:{training_name}"  # Assuming 'training_name' is the port
         config_request = NginxConfigRequest(server_name=server_name, proxy_pass=proxy_pass)
-        update_nginx_response = await update_nginx_config(config_request)
+        update_nginx_response = await create_nginx_config(config_request)
 
         return {
             "message": "Seat created successfully",

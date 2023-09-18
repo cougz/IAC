@@ -28,18 +28,20 @@ class UserUpdateRequest(BaseModel):
     mail: Optional[str]
     roles: Optional[List[Role]]
 
-class DNSTypes(str, Enum):
-    A = "A"
-    AAAA = "AAAA"
-    NS = "NS"
-    MX = "MX"
-    CNAME = "CNAME"
-    RP = "RP"
-    TXT = "TXT"
-    SOA = "SOA"
-    HINFO = "HINFO"
-    SRV = "SRV"
-    DANE = "DANE"
-    TLSA = "TLSA"
-    DS = "DS"
-    CAA = "CAA"
+class DNSRecordBase(BaseModel):
+    name: str  # The name of the DNS record (e.g., subdomain.example.com)
+    content: str  # The content of the DNS record (e.g., IP address or hostname)
+    ttl: int = 3600  # Time to live (TTL) in seconds (default is 3600 seconds)
+
+class DNSARecordCreate(DNSRecordBase):
+    type: str = "A"  # DNS record type (A record for IPv4)
+
+class DNSRecordResponse(BaseModel):
+    id: str
+    type: str
+    name: str
+    content: str
+    ttl: int
+
+class DNSRecordDelete(BaseModel):
+    record_id: str  # The ID of the DNS record to delete

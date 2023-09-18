@@ -46,13 +46,13 @@ async def startup_db_client():
      await get_or_create_db(db)
      await get_or_create_container(container)
 
-@cosmos_router.post("/cosmos-users", response_model=User)
+@cosmos_router.post("/users", response_model=User)
 async def register_cosmos_user(request: Request, user_item: User):
     user_item = jsonable_encoder(user_item)
     new_user = await request.app.user_items_container.create_item(user_item)
     return new_user
 
-@cosmos_router.get("/cosmos-users", response_description="List of all Cosmos users", response_model=List[User])
+@cosmos_router.get("/users", response_description="List of all Cosmos users", response_model=List[User])
 async def list_cosmos_users(request: Request):
     users = [user async for user in request.app.user_items_container.read_all_items()]
     return users

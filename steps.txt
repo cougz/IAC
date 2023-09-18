@@ -3,10 +3,8 @@ python -m venv venv
 source venv/bin/activate  # Activate the virtual environment (on Linux/macOS)
 # For Windows: venv\Scripts\activate
 
-# Install FastAPI and Uvicorn and python-decouple
-pip install fastapi uvicorn
-pip install python-decouple
-
+# Install libraries and modules
+pip install fastapi uvicorn python-decouple aiohttp azure-cosmos
 
 # Run the application
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload

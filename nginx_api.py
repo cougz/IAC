@@ -1,5 +1,6 @@
 import os
 from pydantic import BaseModel
+from fastapi import APIRouter
 
 # Define the base directory where Nginx configuration files will be stored
 nginx_config_dir = "/etc/nginx/conf.d"
