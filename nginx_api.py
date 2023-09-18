@@ -15,7 +15,7 @@ class NginxDeleteRequest(BaseModel):
     server_name: str # e.g. "tim-seiffert.lab.infinigate.io"
 
 nginx_router = APIRouter()
-@nginx_router.post("/nginx-config")
+@nginx_router.post("/config")
 async def create_nginx_config(config_request: NginxConfigRequest):
     # Extract 'server_name' and 'proxy_pass' from the request body
     server_name = config_request.server_name
@@ -62,7 +62,7 @@ async def create_nginx_config(config_request: NginxConfigRequest):
     except Exception as e:
         return {"error": str(e)}
     
-@nginx_router.delete("/nginx-config")
+@nginx_router.delete("/config")
 async def delete_nginx_config(delete_request: NginxDeleteRequest):
     # Extract 'server_name' from the request body
     server_name = delete_request.server_name

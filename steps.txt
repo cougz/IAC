@@ -1,7 +1,5 @@
 # Create a virtual environment (optional but recommended)
 python -m venv venv
-source venv/bin/activate  # Activate the virtual environment (on Linux/macOS)
-# For Windows: venv\Scripts\activate
 
 # Install libraries and modules
 pip install fastapi uvicorn python-decouple aiohttp azure-cosmos
