@@ -26,7 +26,7 @@ async def get_or_create_db(db_name):
     except exceptions.CosmosResourceNotFoundError:
         print("Creating database")
         return await cosmos_router.cosmos_client.create_database(db_name)
-     
+
 async def get_or_create_container(container_name):
     try:        
         cosmos_router.user_items_container = cosmos_router.database.get_container_client(container_name)
