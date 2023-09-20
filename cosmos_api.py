@@ -14,11 +14,6 @@ db = config('COSMOS_DATABASE_NAME')
 
 cosmos_router = APIRouter()
 
-async def startup_db_client():
-     cosmos_router.cosmos_client = CosmosClient(uri, credential = key)
-     await get_or_create_db(db)
-     await get_or_create_container(container)
-
 async def get_or_create_db(db_name):
     try:
         cosmos_router.database  = cosmos_router.cosmos_client.get_database_client(db_name)
