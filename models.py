@@ -29,12 +29,12 @@ class UserUpdateRequest(BaseModel):
     roles: Optional[List[Role]]
 
 class DNSRecordBase(BaseModel):
-    name: str  # The name of the DNS record (e.g., subdomain.example.com)
-    content: str  # The content of the DNS record (e.g., IP address or hostname)
-    ttl: int = 3600  # Time to live (TTL) in seconds (default is 3600 seconds)
+    name: str 
+    content: str
+    ttl: int = 3600
 
 class DNSARecordCreate(DNSRecordBase):
-    type: str = "A"  # DNS record type (A record for IPv4)
+    type: str = "A"
 
 class DNSRecordResponse(BaseModel):
     id: str
