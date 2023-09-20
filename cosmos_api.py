@@ -1,11 +1,9 @@
 from azure.cosmos.aio import CosmosClient
 from azure.cosmos import PartitionKey, exceptions
-from fastapi import FastAPI, HTTPException, APIRouter, Request
+from fastapi import APIRouter, Request
 from fastapi.encoders import jsonable_encoder
 from typing import List
-from models import User, Gender, Role, UserUpdateRequest
-from uuid import UUID
-import requests
+from models import User
 from decouple import config
 
 # Read Cosmos credentials from environment variables using decouple
