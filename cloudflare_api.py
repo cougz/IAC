@@ -48,16 +48,17 @@ async def create_dns(record: DNSARecordCreate):
 async def delete_dns_record(record_info: DNSRecordDelete):
     try:
         # Get All DNS records
-        list_dns_records_response = await list_dns_records()
-        if list_dns_records_response.status_code != 200:
-            raise HTTPException(status_code=list_dns_records_response.status_code, detail="Failed to retrieve DNS records")
+        dns_records = await list_dns_records()
+        #if list_dns_records_response.status_code != 200:
+        #    raise HTTPException(status_code=list_dns_records_response.status_code, detail="Failed to retrieve DNS records")
         # Extract the record ID from the response
-        dns_records = list_dns_records_response.json()
+        #dns_records = list_dns_records_response.json()
+
         matching_record = None
         for record in dns_records:
             if (
-                record["name"] == record_info.record_name
-                and record["type"] == record_info.record_type
+                record["name"] == record_info.name
+                and record["type"] == record_info.type
             ):
                 matching_record = record
                 break
@@ -65,13 +66,11 @@ async def delete_dns_record(record_info: DNSRecordDelete):
         if matching_record is None:
             raise HTTPException(status_code=404, detail="DNS record not found")
 
-        # Extract the identifier (e.g., 'id') of the matching DNS record
-        record_id = matching_record["id"]
-
+        # Extract the identifier (e.g., 'id'["id"]
+        record_id = matching_record.id
         # Construct the API URL for deleting a DNS record
         api_url = f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}"
-        print(f"{record_id}")
-        print(f"{api_url}")
+
         # Define the request headers, including the Cloudflare API token
         headers = {
             "Content-Type": "application/json",

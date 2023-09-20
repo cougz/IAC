@@ -44,5 +44,6 @@ class DNSRecordResponse(BaseModel):
     ttl: int
 
 class DNSRecordDelete(BaseModel):
-    record_name: str
-    record_type: str = "A"
+    id: Optional[str] = "5b656a6dee4c67bf6a911cf8f2c337d2"
+    type: str = "A"
+    name: str = "example"
