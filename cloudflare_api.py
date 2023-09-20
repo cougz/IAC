@@ -49,8 +49,8 @@ async def delete_dns_record(record_info: DNSRecordDelete):
     try:
         # Get All DNS records
         list_dns_records_response = await list_dns_records()
-        if list_dns_records_response != 200:
-            raise HTTPException(status_code=response.status_code, detail="Failed to retrieve DNS records")
+        if list_dns_records_response.status_code != 200:
+            raise HTTPException(status_code=list_dns_records_response.status_code, detail="Failed to retrieve DNS records")
         # Extract the record ID from the response
         dns_records = list_dns_records_response.json()
         matching_record = None
