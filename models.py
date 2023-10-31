@@ -45,4 +45,4 @@ class DNSRecordResponse(BaseModel):
 
 class DNSRecordDelete(BaseModel):
     record_type: str = "A"
-    record_name: str = "example"
+    record_name: str = "test.infinigate-techservices.com"
