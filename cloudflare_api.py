@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from decouple import config
 from nginx_api import NginxConfigRequest, NginxDeleteRequest
 from pydantic import BaseModel
@@ -44,31 +45,8 @@ async def create_dns(record: DNSARecordCreate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@cloudflare_router.delete("/dns-record")
-async def delete_dns_record(record_info: DNSRecordDelete):
-    try:
-        # Get All DNS records
-        dns_records = await list_dns_records()
-        #if list_dns_records_response.status_code != 200:
-        #    raise HTTPException(status_code=list_dns_records_response.status_code, detail="Failed to retrieve DNS records")
-        # Extract the record ID from the response
-        #dns_records = list_dns_records_response.json()
-
-        matching_record = None
-        for record in dns_records:
-            if (
-                record["name"] == record_info.name
-                and record["type"] == record_info.type
-            ):
-                matching_record = record
-                break
-
-        if matching_record is None:
-            raise HTTPException(status_code=404, detail="DNS record not found")
-
-        # Extract the identifier (e.g., 'id'["id"]
-        record_id = matching_record.id
-        # Construct the API URL for deleting a DNS record
+async def delete_dns_record(record_id):
+        # Construct the API URL for creating a DNS A record
         api_url = f"https://api.cloudflare.com/client/v4/zones/{CF_ZONE_ID}/dns_records/{record_id}"
 
         # Define the request headers, including the Cloudflare API token
@@ -81,16 +59,34 @@ async def delete_dns_record(record_info: DNSRecordDelete):
         response = requests.delete(api_url, headers=headers)
 
         # Check the response status code
-        if response.status_code == 204:
-            return {"message": "DNS record deleted successfully"}
-        elif response.status_code == 404:
-            return {"error": "DNS record not found"}
-        else:
-            return {"error": f"Failed to delete DNS record: {response.text}"}
+        response.raise_for_status()
+
+@cloudflare_router.delete("/dns-record")
+async def delete_dns_record_by_name_and_type(request_body: DNSRecordDelete):
+    try:
+        dns_records = await list_dns_records()
+        print(f"All DNS Records: {dns_records}")
+
+        # Find the record with the specified name and type
+        matching_records = [record for record in dns_records if record.name == request_body.record_name and record.type == request_body.record_type]
+
+        print(f"Matching Records: {matching_records}")
+
+        if not matching_records:
+            error_message = f"{request_body.record_type} record '{request_body.record_name}' not found"
+            print(f"Error: {error_message}")
+            return JSONResponse(content={"error": error_message}, status_code=404)
+
+        # Delete the first matching record (you may want to handle multiple matches differently)
+        await delete_dns_record(matching_records[0].id)
+
+        return {"message": f"{request_body.record_type} record '{request_body.record_name}' deleted successfully"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
+        # Print the exception
+        print(f"An error occurred: {str(e)}")
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
 @cloudflare_router.get("/dns-records")
 async def list_dns_records():
     try:
@@ -102,17 +98,15 @@ async def list_dns_records():
             "Content-Type": "application/json",
             "Authorization": f"Bearer {CF_API_KEY}"
         }
-        #print(f"CF_EMAIL: {CF_EMAIL}")
-        #print(f"CF_API_KEY: {CF_API_KEY}")
-        #print(f"CF_ZONE_ID: {CF_ZONE_ID}")
-        
+
         # Send a GET request to fetch all DNS records
         response = requests.get(api_url, headers=headers)
 
         # Check the response status code
         if response.status_code == 200:
             # Parse the JSON response into DNSRecordResponse objects
-            dns_records = response.json()["result"]
+            #dns_records = response.json()["result"]
+            dns_records = response.json().get("result", [])
             parsed_records = [DNSRecordResponse(**record) for record in dns_records]
             return parsed_records
         else:
